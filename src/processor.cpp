@@ -7,35 +7,43 @@ using std::stol;
 
 // TODO: Return the aggregate CPU utilization
 float Processor::Utilization() {
-  /* user    nice   system  idle      iowait irq   softirq  steal  guest
-   * guest_nice */
-
   auto cpu_str_data = LinuxParser::CpuUtilization();
 
-  auto user = stol(cpu_str_data[LinuxParser::CPUStates::kUser_].c_str());
-  auto nice = stol(cpu_str_data[LinuxParser::CPUStates::kNice_].c_str());
-  auto system = stol(cpu_str_data[LinuxParser::CPUStates::kSystem_].c_str());
-  auto idle = stol(cpu_str_data[LinuxParser::CPUStates::kIdle_].c_str());
-  auto iowait = stol(cpu_str_data[LinuxParser::CPUStates::kIOwait_].c_str());
+  std::vector<LinuxParser::CPUStates> needs_parse{
+      LinuxParser::CPUStates::kUser_,    LinuxParser::CPUStates::kNice_,
+      LinuxParser::CPUStates::kSystem_,  LinuxParser::CPUStates::kIdle_,
+      LinuxParser::CPUStates::kIOwait_,  LinuxParser::CPUStates::kIRQ_,
+      LinuxParser::CPUStates::kSoftIRQ_, LinuxParser::CPUStates::kSteal_,
+      LinuxParser::CPUStates::kGuest_,   LinuxParser::CPUStates::kGuestNice_};
 
-  auto irq = stol(cpu_str_data[LinuxParser::CPUStates::kIRQ_].c_str());
-  auto softirq = stol(cpu_str_data[LinuxParser::CPUStates::kSoftIRQ_].c_str());
-  auto steal = stol(cpu_str_data[LinuxParser::CPUStates::kSteal_].c_str());
-  [[maybe_unused]] auto guest =
-      stol(cpu_str_data[LinuxParser::CPUStates::kGuest_].c_str());
-  [[maybe_unused]] auto guest_nice =
-      stol(cpu_str_data[LinuxParser::CPUStates::kGuestNice_].c_str());
+  std::vector<long> cpu_util_vals;
 
-  auto idle_g = idle + iowait;
-  auto nonIdle = user + nice + system + irq + softirq + steal;
+  for (auto cpu_state : needs_parse) {
+    if (cpu_str_data[cpu_state].empty()) {
+      cpu_util_vals.emplace_back(0);
+    } else {
+      cpu_util_vals.emplace_back(stol(cpu_str_data[cpu_state].c_str()));
+    }
+  }
 
-  auto total = idle_g + nonIdle;
+  auto idle_g = cpu_util_vals[LinuxParser::CPUStates::kIdle_] +
+                cpu_util_vals[LinuxParser::CPUStates::kIOwait_];
 
-  auto totald = total - Processor::prevTotal;
-  auto idled = idle - Processor::prevIdle;
+  auto non_idle = cpu_util_vals[LinuxParser::CPUStates::kUser_] +
+                  cpu_util_vals[LinuxParser::CPUStates::kNice_] +
+                  cpu_util_vals[LinuxParser::CPUStates::kSystem_] +
+                  cpu_util_vals[LinuxParser::CPUStates::kIRQ_] +
+                  cpu_util_vals[LinuxParser::CPUStates::kSoftIRQ_] +
+                  cpu_util_vals[LinuxParser::CPUStates::kSteal_];
 
-  Processor::prevIdle = idle;
-  Processor::prevTotal = total;
+  auto total = idle_g + non_idle;
+
+  auto totald = total - Processor::prev_total;
+  auto idled =
+      cpu_util_vals[LinuxParser::CPUStates::kIdle_] - Processor::prev_idle;
+
+  Processor::prev_idle = cpu_util_vals[LinuxParser::CPUStates::kIdle_];
+  Processor::prev_total = total;
 
   return (totald - idled * 1.0) / totald;
 }

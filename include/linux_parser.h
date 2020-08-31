@@ -64,6 +64,29 @@ std::string Ram(int pid);
 std::string Uid(int pid);
 std::string User(int pid);
 long int UpTime(int pid);
+
+template <typename T1>
+T1 findValueByKey(std::string const& in_key, std::string const& file_path) {
+  std::string line;
+  std::string key;
+  T1 value{};
+
+  std::ifstream filestream(file_path);
+
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream(line);
+      while (linestream >> key >> value) {
+        if (key == in_key) {
+          return value;
+        }
+      }
+    }
+    filestream.close();
+  }
+  return value;
+}
+
 };  // namespace LinuxParser
 
 #endif

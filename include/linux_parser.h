@@ -47,6 +47,18 @@ long ActiveJiffies(int pid);
 long IdleJiffies();
 
 // Processes
+
+enum ProcStats {
+  // WARNING: It is not complete.
+  kUtime_ = 13,
+  kStime_,
+  kCutime_,
+  kCstime_,
+  kStarttime_
+};
+
+std::vector<std::string> ProcCpuUtilization(int pid);
+
 std::string Command(int pid);
 std::string Ram(int pid);
 std::string Uid(int pid);

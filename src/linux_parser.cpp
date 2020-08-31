@@ -406,7 +406,7 @@ long LinuxParser::UpTime(int pid) {
   std::ifstream filestream(kProcDirectory + to_string(pid) + kStatFilename);
 
   if (filestream.is_open()) {
-    while (std::getline(filestream, line) && uptime.empty()) {
+    while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
       while (uptime_cnt < 22 && linestream >> value) {
         uptime = value;

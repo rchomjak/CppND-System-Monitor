@@ -18,13 +18,15 @@ int Process::Pid() { return Process::pid_; }
 
 // TODO: Return this process's CPU utilization
 float Process::CpuUtilization() {
+  // I read the chat(hub.udacity) to get the information and stackoverflow to
+  // calculate cpuutilization
   auto system_uptime = LinuxParser::UpTime();
   auto process_uptime = LinuxParser::UpTime(Process::Pid());
-  auto time = system_uptime - process_uptime;
+  auto time_diff = system_uptime - process_uptime;
 
   auto active_jiffies = LinuxParser::ActiveJiffies(Process::Pid());
 
-  return 1.0 * (active_jiffies / sysconf(_SC_CLK_TCK)) / time;
+  return 1.0 * (active_jiffies / sysconf(_SC_CLK_TCK)) / time_diff;
 }
 
 // TODO: Return the command that generated this process
